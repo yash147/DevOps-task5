@@ -1,0 +1,49 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: grafana-service
+  labels:
+    app: grafana
+spec:
+  ports:
+  - port: 3000
+  selector:
+    app: grafana
+  type: NodePort
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: graf-data
+  labels:
+    name: graf-data
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 6Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: graf-dep
+spec:
+  selector:
+    matchExpressions:
+      - {key: app, operator: In, values: [grafana]}
+  template:
+    metadata:
+      labels:
+        app: grafana
+    spec:
+      containers:
+        - image: grafana/grafana
+          name: grafana
+          volumeMounts:
+          - name: data-storage
+            mountPath: /var/lib/grafana
+      volumes:
+      - name: data-storage
+        persistentVolumeClaim:
+          claimName: graf-data
